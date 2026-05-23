@@ -2,7 +2,7 @@ import asyncio
 from aiogram import Bot, Dispatcher
 
 from app.core.settings import settings
-from app.handlers.main import router
+from app.handlers import router_main, router_prof
 from app.middleware.context import DBUserMiddleware
 
 async def main():
@@ -10,7 +10,7 @@ async def main():
     bot = Bot(token=settings.BOT_TOKEN)
     
     db = Dispatcher()
-    db.include_router(router)
+    db.include_routers(router_prof, router_main)
 
     db.update.middleware(DBUserMiddleware())
 

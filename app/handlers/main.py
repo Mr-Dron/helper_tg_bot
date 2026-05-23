@@ -24,31 +24,12 @@ async def start(message: Message):
                         "или выгулять собаку. Тогда компания может стать списком задач семьи, друзей или вашим личным, здесь вас ограничивает только " \
                         "ваша фантазия.\n\n" \
                         "Этот проект двигается на чистом энтузиазме и вере в светлое будущее)\n" \
-                        "Version: pre-alpha 1.0.0",
+                        "Version: pre-alpha 1.0.1",
                         parse_mode="HTML",
                         reply_markup=menu.main_menu()
                         )
 
 
-@router.callback_query(F.data == "me")
-async def me_info(callback: CallbackQuery,
-                  user: Users,
-                  db: AsyncSession):
-
-    text = (
-        f"ID: {user.id}\n"
-        f"Имя: {user.first_name}\n"
-        f"Имя пользователя: {user.username}\n" 
-        f"Ссылка: {user.telegram_url}"
-    )
-
-    await callback.message.answer(
-        text,
-        parse_mode="HTML",
-        reply_markup=menu.back_menu()
-    )
-
-    await callback.answer()
 
 
 # @router.callback_query(F.data == "update_me")
