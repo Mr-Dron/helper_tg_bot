@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     POSTGRES_PORT: int
 
+    REDIS_HOST: str
+    REDIS_PORT: int
+
     DATABASE_URL: str
 
     BOT_TOKEN: str

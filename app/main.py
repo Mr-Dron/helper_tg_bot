@@ -1,16 +1,25 @@
 import asyncio
+from redis.asyncio import Redis
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.redis import RedisStorage
+
 
 from app.core.settings import settings
-from app.handlers import router_main, router_prof
+from app.handlers import ROUTERS
 from app.middleware.context import DBUserMiddleware
 
 async def main():
 
+    redis_client = Redis(host=settings.REDIS_HOST,
+                         port=settings.REDIS_PORT,
+                         decode_responses=True)
+    
+    storage = RedisStorage(redis=redis_client)
+
     bot = Bot(token=settings.BOT_TOKEN)
     
-    db = Dispatcher()
-    db.include_routers(router_prof, router_main)
+    db = Dispatcher(storage=storage)
+    db.include_routers(*ROUTERS)
 
     db.update.middleware(DBUserMiddleware())
 

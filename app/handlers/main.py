@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, StateFilter
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
@@ -13,7 +13,10 @@ router = Router()
 
 
 @router.message(CommandStart())
-async def start(message: Message):
+async def start(message: Message,
+                state: FSMContext):
+
+    await state.clear()
 
     await message.answer("<b>Добро пожаловать!</b>\n" \
                         "Это бот помощник, менеджер задач. Он поможе вам не потерять задчаи, " \
@@ -30,10 +33,6 @@ async def start(message: Message):
                         )
 
 
-
-
-# @router.callback_query(F.data == "update_me")
-# async def update_user_data()
 
 @router.callback_query(F.data == "echo")
 async def echo_mode(
@@ -68,6 +67,20 @@ async def back_to_menu(message: Message,
     await state.clear()
 
     await message.answer(
+        "Главное меню",
+        reply_markup=menu.main_menu()
+    )
+
+@router.callback_query(
+    F.data == "return_menu",
+    StateFilter("*")
+)
+async def back_to_menu_callback(callback: CallbackQuery,
+                       state: FSMContext):
+    
+    await state.clear()
+
+    await callback.message.answer(
         "Главное меню",
         reply_markup=menu.main_menu()
     )
