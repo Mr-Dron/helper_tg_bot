@@ -2,14 +2,15 @@ import math
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.database import TaskStatus
 from app.models import Tasks, Users
-from app.repositories import task as task_per
+from app.repositories import task as task_rep
 from app.helpers import task as task_help
 from app.keyboards import task as task_key
 
 async def build_task_menu_context(company_id: int, current_page: int, db: AsyncSession):
 
-    tasks = await task_per.get_tasks_company(company_id=company_id,
+    tasks = await task_rep.get_tasks_company(company_id=company_id,
                                              page=current_page,
                                              db=db)
     
@@ -52,3 +53,29 @@ async def save_new_task(company_id: int, user: Users, title, description, db: As
     keyboard = task_key.save_task_keyboard()
 
     return (text, keyboard)
+
+async def current_task_menu(task_id: int, db: AsyncSession):
+
+    task = await task_rep.get_current_task(task_id=task_id, db=db)
+
+    text = await task_help.prepate_text_current_task_menu(task=task)
+
+    keyborad = task_key.current_task_keyboard()
+
+    return text, keyborad
+
+async def edit_status_task(task_id: int, db: AsyncSession):
+
+    task = await task_rep.get_current_task(task_id=task_id, db=db)
+    text = await task_help.prepare_text_edit_status(task=task)
+
+    keyboard = task_key.status_task_keyboard(task_id=task_id)
+
+    return text, keyboard
+
+async def uppend_status_task(task_id: int, new_status: str, db: AsyncSession):
+    task = await task_rep.get_current_task(task_id=task_id, db=db)
+    task.status = TaskStatus[new_status]
+
+    await db.flush()
+

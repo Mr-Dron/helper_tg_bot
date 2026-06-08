@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 from sqlalchemy import select, func
 
 from app.models import Tasks
@@ -29,3 +30,18 @@ async def get_count_tasks_company(company_id: int, db: AsyncSession):
     count_tasks = (await db.execute(stmt)).scalar()
 
     return count_tasks
+
+async def get_current_task(task_id: int, db: AsyncSession):
+
+    stmt = (
+        select(Tasks)
+        .where(Tasks.id == task_id)
+        .options(
+            joinedload(Tasks.creator),
+            joinedload(Tasks.responsible)
+        )
+    )
+
+    task = (await db.execute(stmt)).scalar_one_or_none()
+
+    return task

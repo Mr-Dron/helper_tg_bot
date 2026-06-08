@@ -2,6 +2,7 @@ from aiogram.types import (InlineKeyboardMarkup, InlineKeyboardButton,
                            ReplyKeyboardMarkup, KeyboardButton)
 
 from app.models import Tasks
+from app.core.database import TaskStatus
 
 def tasks_menu(tasks_list: list[Tasks], total_page: int, current_page: int):
     
@@ -114,4 +115,57 @@ def save_task_keyboard():
         ]
     ])
 
+    return keyboard
+
+def current_task_keyboard():
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="Сменить статус",
+                callback_data="task_new_status"
+            ),
+            InlineKeyboardButton(
+                text="Назначить",
+                callback_data="task_new_responsible"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Редактировать",
+                callback_data="3"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Меню компании",
+                callback_data="company_menu"
+            ),
+            InlineKeyboardButton(
+                text="Список задач",
+                callback_data="company_tasks"
+            )
+        ]
+    ])
+
+    return keyboard
+
+def status_task_keyboard(task_id: int):
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="Отмена",
+                callback_data=f"login_task_{task_id}"
+            )
+        ]
+    ])
+
+    for status in TaskStatus:
+        button = InlineKeyboardButton(
+            text=status.value,
+            callback_data=status.name
+        )
+        keyboard.inline_keyboard.append([button])
+    
     return keyboard

@@ -33,24 +33,18 @@ async def count_pages(company_id: int, db: AsyncSession):
 
 async def prepare_text_task_create(responsible_id: int, title: str, description: str):
 
-    text = "Создание новой задач\n"
+    fields = {
+        "Название": title,
+        "Описание": description,
+        "Ответственный": responsible_id
+    }
 
-    if not title:
-        text += "Название: Не заполнено\n"
-    else:
-        text += f"Название: {title}\n"
-    
-    if not description:
-        text += "Описание: Не заполнено\n"
-    else:
-        text += f"Описание: {description}\n"
-    
-    if not responsible_id:
-        text += "Ответственный: Не назначен\n"
-    else:
-        text += f"Ответственный: {responsible_id}\n"
+    lines = [
+        f"{label}: {value if value else '_Не заполнено_'}"
+        for label, value in fields.items()
+    ]
 
-    return text
+    return f"*Карточка новой задачи*\n\n" + "\n".join(lines)
 
 async def prepate_text_save_task(task: Tasks):
 
@@ -63,3 +57,35 @@ async def prepate_text_save_task(task: Tasks):
            f"Компания: {task.company_id}"
     
     return text
+
+async def prepate_text_current_task_menu(task: Tasks):
+
+    fields = {
+        "Название": task.title,
+        "Описание": task.description,
+        "Ответственный": f"@{task.responsible.username}",
+        "Создатель": f"@{task.creator.username}",
+        "Этап": task.status.value,
+        "Компаний": task.company_id
+    }
+
+    lines = [
+        f"{label}: {value if value and value != "@" else '_Не заполнено_'}"
+        for label, value in fields.items()
+    ]
+
+    return "*Карточка задачи*\n\n" + "\n".join(lines)
+
+async def prepare_text_edit_status(task: Tasks):
+    fields = {
+        "Название": task.title,
+        "Описание": task.description,
+        "Ответственный": f"@{task.responsible.username}",
+    }
+
+    lines = [
+        f"{label}: {value if value and value != "@" else '_Не заполнено_'}"
+        for label, value in fields.items()
+    ]
+
+    return f"*Текущий этап: {task.status.value}*\n\n" + "\n".join(lines)

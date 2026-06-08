@@ -102,6 +102,7 @@ async def company_menu(callback: CallbackQuery,
                        user: Users,
                        db: AsyncSession):
     
+    await state.update_data(task_id=None)
     data = await state.get_data()
     company_id = data.get("company_id")
     company = await company_rep.get_company_by_id_req(company_id=company_id,

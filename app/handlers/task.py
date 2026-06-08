@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.database import TaskStatus
 from app.models import Users
 from app.keyboards import task as task_key
 from app.repositories import task as task_rep
@@ -19,6 +20,7 @@ async def get_company_tasks(callback: CallbackQuery,
                             state: FSMContext,
                             db: AsyncSession):
 
+    await state.update_data(task_id=None)
     data = await state.get_data()
     company_id = data.get("company_id")
 
@@ -168,5 +170,75 @@ async def save_new_task(callback: CallbackQuery,
         text=text,
         reply_markup=keyboard
     )
+
+# endregion
+
+# region просмотр задач
+
+@router.callback_query(F.data.startswith("login_task_"))
+async def get_current_task(callback: CallbackQuery,
+                           state: FSMContext,
+                           user: Users,
+                           db: AsyncSession):
+    task_id = int(callback.data.split("_")[-1])
+
+    await state.update_data(task_id=task_id)
+
+    text, keyboard = await task_ser.current_task_menu(task_id=task_id,
+                                                      db=db)
+    
+    await callback.message.answer(
+        text=text,
+        reply_markup=keyboard,
+        parse_mode="markdown"
+    )
+
+# endregion
+
+# region рудактирование задачи
+
+@router.callback_query(F.data == "task_new_status")
+async def edit_status_task(callback: CallbackQuery,
+                           state: FSMContext,
+                           user: Users,
+                           db: AsyncSession):
+    
+    data = await state.get_data()
+    task_id = data.get("task_id")
+
+    text, keyboard = await task_ser.edit_status_task(task_id=task_id,
+                                                     db=db)
+    
+    await callback.message.answer(
+        text=text,
+        reply_markup=keyboard,
+        parse_mode="markdown"
+    )
+
+@router.callback_query(F.data.in_([status.name for status in TaskStatus]))
+async def update_status(callback: CallbackQuery,
+                        state: FSMContext,
+                        db: AsyncSession):
+    
+    data = await state.get_data()
+    task_id = data.get("task_id")
+
+    await task_ser.uppend_status_task(task_id=task_id,
+                                      new_status=callback.data,
+                                      db=db)
+    await callback.message.answer(
+        text="Статус задачи изменен"
+    )
+
+    text, keyboard = await task_ser.current_task_menu(task_id=task_id,
+                                                      db=db)
+    
+    await callback.message.answer(
+        text=text,
+        reply_markup=keyboard,
+        parse_mode="markdown"
+    )
+
+    
 
 # endregion
