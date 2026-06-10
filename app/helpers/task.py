@@ -1,8 +1,9 @@
 import math
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.engine import Row
 
-from app.models import Tasks
+from app.models import Tasks, EmployeesCompany
 from app.repositories import task as task_per
 
 async def prepare_text_tasks_menu(tasks_list: list[Tasks], current_page: int, total_page: int):
@@ -89,3 +90,18 @@ async def prepare_text_edit_status(task: Tasks):
     ]
 
     return f"*Текущий этап: {task.status.value}*\n\n" + "\n".join(lines)
+
+async def text_choose_new_responsible(employees_data: list[Row],
+                                      current_page: int, total_page: int):
+    
+    lines = []
+    
+    for employee, user, task_count in employees_data:
+        if not task_count:
+            task_count = 0
+        lines.append(f"#{employee.id} "\
+                     f"{user.first_name} _должность_\n"\
+                     f"Активных задач ({task_count})")
+
+    return "Выберите ответсвенного\n"\
+           f"Страница {current_page} из {total_page}\n\n" + "\n".join(lines)

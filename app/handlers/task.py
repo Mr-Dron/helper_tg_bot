@@ -34,7 +34,8 @@ async def get_company_tasks(callback: CallbackQuery,
 
     await callback.message.answer(
         text=text,
-        reply_markup=keyboard
+        reply_markup=keyboard,
+        parse_mode="markdown"
     )
 
 @router.callback_query(F.data.in_({"page_tasks_previous", "page_tasks_next"}))
@@ -61,7 +62,8 @@ async def page_company_tasks(callback: CallbackQuery,
 
     await callback.message.answer(
         text=text,
-        reply_markup=keyboard
+        reply_markup=keyboard,
+        parse_mode="markdown"
     )
 
 # endregion
@@ -78,7 +80,8 @@ async def create_task(callback: CallbackQuery,
 
     await callback.message.answer(
         text=text,
-        reply_markup=keyboard
+        reply_markup=keyboard,
+        parse_mode="markdown"
     )
 
 @router.callback_query(task_state.CreateTaskState.new_task,
@@ -114,7 +117,8 @@ async def read_title(message: Message,
 
     await message.answer(
         text=text,
-        reply_markup=keyboard
+        reply_markup=keyboard,
+        parse_mode="markdown"
     )
 
 @router.message(
@@ -134,7 +138,8 @@ async def read_description(message: Message,
 
     await message.answer(
         text=text,
-        reply_markup=keyboard
+        reply_markup=keyboard,
+        parse_mode="markdown"
     )
 
 @router.callback_query(F.data.in_({"save_new_task", "inactive_save_task"}))
@@ -168,7 +173,8 @@ async def save_new_task(callback: CallbackQuery,
     
     await callback.message.answer(
         text=text,
-        reply_markup=keyboard
+        reply_markup=keyboard,
+        parse_mode="markdown"
     )
 
 # endregion
@@ -195,7 +201,7 @@ async def get_current_task(callback: CallbackQuery,
 
 # endregion
 
-# region рудактирование задачи
+# region редактирование задачи
 
 @router.callback_query(F.data == "task_new_status")
 async def edit_status_task(callback: CallbackQuery,
@@ -239,6 +245,84 @@ async def update_status(callback: CallbackQuery,
         parse_mode="markdown"
     )
 
+@router.callback_query(F.data == "task_new_responsible")
+async def choose_new_responsible(callback: CallbackQuery,
+                                  state: FSMContext,
+                                  user: Users,
+                                  db: AsyncSession):
+    data = await state.get_data()
+    task_id = data.get("task_id")
+    company_id = data.get("company_id")
+    await state.update_data(choose_resp_current_page=1)
+
+    text, keyboard = await task_ser.choose_new_responsible(current_page=1,
+                                                           task_id=task_id,
+                                                           company_id=company_id,
+                                                           db=db)
+
+    await callback.message.answer(
+        text=text,
+        reply_markup=keyboard,
+        parse_mode="markdown"
+    )
+
+@router.callback_query(F.data.in_(["previuos_page_new_responsible",
+                                   "next_page_new_responsible"]))
+async def navigation_choose_new_resp(callback: CallbackQuery,
+                                     state: FSMContext,
+                                     user: Users,
+                                     db: AsyncSession):
     
+    data = await state.get_data()
+    company_id = data.get("company_id")
+    task_id = data.get("task_id")
+    current_page = data.get("choose_resp_current_page")
+
+    if state.data.startswith("previous"):
+        current_page -= 1
+    else:
+        current_page += 1
+
+    text, keyboard = await task_ser.choose_new_responsible(current_page=current_page,
+                                                           task_id=task_id,
+                                                           company_id=company_id,
+                                                           db=db)
+
+    await state.update_data(choose_resp_current_page=current_page)
+
+    await callback.message.answer(
+        text=text,
+        reply_markup=keyboard,
+        parse_mode="markdown"
+    )
+
+@router.callback_query(F.data.startswith("new_responsible_"))
+async def appoint_new_resp(callback: CallbackQuery,
+                           state: FSMContext,
+                           user: Users,
+                           db: AsyncSession):
+    
+    resp_id = int(callback.data.split("_")[-1])
+    
+    data = await state.get_data()
+    task_id = data.get("task_id")
+
+    task = await task_rep.get_current_task(task_id=task_id,
+                                           db=db)
+    
+    task.responsible_id = resp_id
+
+    await db.commit()
+    await db.refresh(task)
+
+    text, keyboard = await task_ser.current_task_menu(task_id=task_id,
+                                                      db=db)
+    
+    await callback.message.answer(
+        text=text,
+        reply_markup=keyboard,
+        parse_mode="markdown"
+    )
+
 
 # endregion

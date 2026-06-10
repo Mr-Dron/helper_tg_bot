@@ -27,12 +27,20 @@ class DBUserMiddleware(BaseMiddleware):
                                                 ).scalar_one_or_none()
                 
                 if not user:
-                    user = Users(
-                        telegram_id= telegram_user.id,
-                        telegram_url=f"https://t.me/{telegram_user.username}",
-                        username=telegram_user.username,
-                        first_name=telegram_user.first_name
-                    )
+                    if not telegram_user.username:
+                        user = Users(
+                            telegram_id= telegram_user.id,
+                            telegram_url=f"tg://user?id={telegram_user.id}",
+                            username=telegram_user.username,
+                            first_name=telegram_user.first_name
+                        )
+                    else:
+                        user = Users(
+                            telegram_id= telegram_user.id,
+                            telegram_url=f"https://t.me/{telegram_user.username}",
+                            username=telegram_user.username,
+                            first_name=telegram_user.first_name
+                        )
 
                     session.add(user)
 

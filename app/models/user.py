@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, BigInteger
 
 from app.core.database import Base
 
@@ -8,6 +8,7 @@ class Users(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     telegram_id: Mapped[int] = mapped_column(
+        BigInteger,
         nullable=False,
         index=True
     )
@@ -17,7 +18,7 @@ class Users(Base):
     )
     username: Mapped[str] = mapped_column(
         String(50), 
-        nullable=False
+        nullable=True
     )
     first_name: Mapped[str] = mapped_column(
         String(50),

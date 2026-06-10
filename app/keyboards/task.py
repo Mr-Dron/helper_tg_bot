@@ -1,7 +1,7 @@
 from aiogram.types import (InlineKeyboardMarkup, InlineKeyboardButton,
                            ReplyKeyboardMarkup, KeyboardButton)
 
-from app.models import Tasks
+from app.models import Tasks, EmployeesCompany
 from app.core.database import TaskStatus
 
 def tasks_menu(tasks_list: list[Tasks], total_page: int, current_page: int):
@@ -167,5 +167,45 @@ def status_task_keyboard(task_id: int):
             callback_data=status.name
         )
         keyboard.inline_keyboard.append([button])
+    
+    return keyboard
+
+def choose_new_responsible(total_page: int, current_page: int, task_id: int,
+                           employees: list[EmployeesCompany]):
+    
+    employees_buttons = []
+
+    for employee in employees:
+        button = InlineKeyboardButton(
+            text = f"#{employee.id}",
+            callback_data=f"new_responsible_{employee.user_id}"
+        )
+        employees_buttons.append(button)
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        employees_buttons,
+        [
+            InlineKeyboardButton(
+                text="Отмена",
+                callback_data=f"login_task_{task_id}"
+            )
+        ]
+    ])
+
+    previuos_button = InlineKeyboardButton(
+        text="Предыдущая",
+        callback_data="previuos_page_new_responsible"
+    )
+    next_button = InlineKeyboardButton(
+        text="Следующая",
+        callback_data="next_page_new_responsible"
+    )
+
+    if current_page > 1 and total_page > current_page:
+        keyboard.inline_keyboard.insert(1, [previuos_button, next_button])
+    elif total_page == current_page and total_page > 1:
+        keyboard.inline_keyboard.insert(1, [previuos_button])
+    elif current_page == 1 and total_page > 1:
+        keyboard.inline_keyboard.insert(1, [next_button])
     
     return keyboard

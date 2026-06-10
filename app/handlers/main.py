@@ -1,22 +1,62 @@
 from aiogram import Router, F
-from aiogram.filters import CommandStart, StateFilter
+from aiogram.filters import CommandStart, StateFilter, Command, CommandObject
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
+from aiogram.utils.deep_linking import decode_payload
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.keyboards import menu
 from app.states.echo import EchoState
 from app.models import Users
+from app.repositories import employee as employee_rep
 
 router = Router()
 
 
 @router.message(CommandStart())
 async def start(message: Message,
-                state: FSMContext):
+                command: CommandObject,
+                state: FSMContext,
+                db: AsyncSession):
 
     await state.clear()
+
+    args = command.args
+
+    if args:
+
+        payload = decode_payload(args)
+        if payload.startswith("inv_"):
+            token = payload.replace("inv_", "")
+
+            invite = await employee_rep.check_invite_token(token=token,
+                                                        db=db)
+            
+            if not token:
+                await message.answer(text="Эта ссылку уже старела или не существует",
+                                     reply_markup=menu.main_menu())
+                return
+                
+            
+            is_exists = await employee_rep.check_exists_employee(invite.company_id,
+                                                        message.from_user.id,
+                                                        db=db)
+            
+            if is_exists:
+                await message.answer(text="Вы уже являетесь сотрудником этой компании!",
+                                     reply_markup=menu.main_menu())
+                return
+
+            await employee_rep.add_new_employee(comapny_id=invite.company_id,
+                                                telegram_id=message.from_user.id,
+                                                db=db)
+            
+            await message.answer(
+                text="Добро пожаловать!\nВы успешно добавлены в компанию и теперь можете видеть активные задачи",
+                reply_markup=menu.main_menu())
+
+            return
 
     await message.answer("<b>Добро пожаловать!</b>\n" \
                         "Это бот помощник, менеджер задач. Он поможе вам не потерять задчаи, " \
@@ -27,7 +67,7 @@ async def start(message: Message,
                         "или выгулять собаку. Тогда компания может стать списком задач семьи, друзей или вашим личным, здесь вас ограничивает только " \
                         "ваша фантазия.\n\n" \
                         "Этот проект двигается на чистом энтузиазме и вере в светлое будущее)\n" \
-                        "Version: pre-alpha 1.0.1",
+                        "Version: Alpha 1.0.1",
                         parse_mode="HTML",
                         reply_markup=menu.main_menu()
                         )

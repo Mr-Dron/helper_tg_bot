@@ -24,7 +24,7 @@ async def create_company(name: str, user: Users, db: AsyncSession) -> Companies:
 
 async def add_new_employe(user: Users, company: Companies, db: AsyncSession):
 
-    if company_help.employe_exists(user, company, db):
+    if await company_help.employe_exists(user, company, db):
 
         new_employe = EmployeesCompany(
             company_id = company.id,

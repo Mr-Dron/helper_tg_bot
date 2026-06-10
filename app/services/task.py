@@ -4,7 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import TaskStatus
 from app.models import Tasks, Users
-from app.repositories import task as task_rep
+from app.repositories import (task as task_rep,
+                              employee as employee_rep)
 from app.helpers import task as task_help
 from app.keyboards import task as task_key
 
@@ -79,3 +80,24 @@ async def uppend_status_task(task_id: int, new_status: str, db: AsyncSession):
 
     await db.flush()
 
+async def choose_new_responsible(current_page: int, task_id: int, 
+                                 company_id: int, db: AsyncSession):
+
+    employees_data = await employee_rep.get_employees_company_with_tasks(current_page=current_page,
+                                                                    company_id=company_id,
+                                                                    db=db)
+    total_page = await employee_rep.get_count_employees_company(company_id=company_id,
+                                                                db=db)
+    
+    text = await task_help.text_choose_new_responsible(employees_data=employees_data,
+                                                       current_page=current_page,
+                                                       total_page=total_page)
+    
+    employees = [row.EmployeesCompany for row in employees_data]
+
+    keyboard = task_key.choose_new_responsible(total_page=total_page,
+                                               current_page=current_page,
+                                               task_id=task_id,
+                                               employees=employees)
+
+    return text, keyboard
