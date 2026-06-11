@@ -86,3 +86,17 @@ async def get_employees_company_with_tasks(current_page: int, company_id: int,
     employees = (await db.execute(stmt)).all()
 
     return employees
+
+async def get_current_employee_company(company_id: int, employee_id: int,
+                                       db: AsyncSession) -> EmployeesCompany:
+    
+    stmt = (
+        select(EmployeesCompany)
+        .options(joinedload(EmployeesCompany.employees))
+        .where(and_(EmployeesCompany.company_id == company_id,
+                    EmployeesCompany.user_id == employee_id))
+    )
+
+    employee = (await db.execute(stmt)).scalar_one_or_none()
+
+    return employee

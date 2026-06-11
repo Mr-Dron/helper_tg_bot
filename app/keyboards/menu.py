@@ -28,13 +28,11 @@ def main_menu():
 
 def back_menu():
 
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(
-                text="Вернуться в меню"
-                )
-            ]
-        ],
-        resize_keyboard=True
-    )
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(
+            text="В меню",
+            callback_data="return_menu"
+            )
+        ]
+    ])

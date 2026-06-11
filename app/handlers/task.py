@@ -1,4 +1,7 @@
+import asyncio
+
 from aiogram import Router, F
+from aiogram.enums import ParseMode
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
@@ -32,11 +35,12 @@ async def get_company_tasks(callback: CallbackQuery,
 
     await state.update_data(current_page=1)
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
         parse_mode="markdown"
     )
+    await callback.answer()
 
 @router.callback_query(F.data.in_({"page_tasks_previous", "page_tasks_next"}))
 async def page_company_tasks(callback: CallbackQuery,
@@ -60,11 +64,12 @@ async def page_company_tasks(callback: CallbackQuery,
 
     await state.update_data(current_page=current_page)
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
         parse_mode="markdown"
     )
+    await callback.answer()
 
 # endregion
 
@@ -78,11 +83,12 @@ async def create_task(callback: CallbackQuery,
 
     text, keyboard = await task_ser.build_task_create_context()
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
         parse_mode="markdown"
     )
+    await callback.answer()
 
 @router.callback_query(task_state.CreateTaskState.new_task,
                        F.data.in_({"edit_title", "edit_description"}))
@@ -96,9 +102,13 @@ async def edit_new_task_data(callback: CallbackQuery,
         text = "Введите описание задачи"
         await state.set_state(task_state.CreateTaskState.read_description)
 
-    await callback.message.answer(
+    promt_message = await callback.message.edit_text(
         text=text
     )
+
+    await state.update_data(promt_msg_id=promt_message.message_id)
+    
+    await callback.answer()
 
 @router.message(
     task_state.CreateTaskState.read_title
@@ -111,6 +121,26 @@ async def read_title(message: Message,
 
     data = await state.get_data()
     description = data.get("description")
+    promt_msg_id = data.get("promt_msg_id")
+
+    if promt_msg_id:
+        try: 
+            await message.bot.delete_message(
+                chat_id=message.chat.id,
+                message_id=promt_msg_id
+            )
+        except:
+            pass
+    
+    try:
+        await message.bot.delete_message(
+            chat_id=message.chat.id,
+            message_id=message.message_id
+        )
+    except:
+        pass
+
+    asyncio.sleep(0.5)
 
     text, keyboard = await task_ser.build_task_create_context(title=message.text,
                                                               description=description)
@@ -132,6 +162,26 @@ async def read_description(message: Message,
 
     data = await state.get_data()
     title = data.get("title")
+    promt_msg_id = data.get("promt_msg_id")
+
+    if promt_msg_id:
+        try: 
+            await message.bot.delete_message(
+                chat_id=message.chat.id,
+                message_id=promt_msg_id
+            )
+        except:
+            pass
+    
+    try:
+        await message.bot.delete_message(
+            chat_id=message.chat.id,
+            message_id=message.message_id
+        )
+    except:
+        pass
+
+    asyncio.sleep(0.5)
 
     text, keyboard = await task_ser.build_task_create_context(description=message.text,
                                                               title=title)
@@ -141,6 +191,7 @@ async def read_description(message: Message,
         reply_markup=keyboard,
         parse_mode="markdown"
     )
+
 
 @router.callback_query(F.data.in_({"save_new_task", "inactive_save_task"}))
 async def save_new_task(callback: CallbackQuery,
@@ -154,14 +205,15 @@ async def save_new_task(callback: CallbackQuery,
     description = data.get("description")
 
     if callback.data == "inactive_save_task":
-        await callback.message.answer(text="Заполните поля")
+        await callback.message.edit_text(text="Заполните поля")
         text, keyboard = await task_ser.build_task_create_context(description=description,
                                                                   title=title)
 
-        await callback.message.answer(
+        await callback.message.edit_text(
             text=text,
             reply_markup=keyboard
         )
+        await callback.answer()
 
         return
     
@@ -171,11 +223,13 @@ async def save_new_task(callback: CallbackQuery,
     
     await state.set_state(None)
     
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
         parse_mode="markdown"
     )
+
+    await callback.answer()
 
 # endregion
 
@@ -193,11 +247,12 @@ async def get_current_task(callback: CallbackQuery,
     text, keyboard = await task_ser.current_task_menu(task_id=task_id,
                                                       db=db)
     
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
-        parse_mode="markdown"
+        parse_mode=ParseMode.HTML
     )
+    await callback.answer()
 
 # endregion
 
@@ -215,11 +270,12 @@ async def edit_status_task(callback: CallbackQuery,
     text, keyboard = await task_ser.edit_status_task(task_id=task_id,
                                                      db=db)
     
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
         parse_mode="markdown"
     )
+    await callback.answer()
 
 @router.callback_query(F.data.in_([status.name for status in TaskStatus]))
 async def update_status(callback: CallbackQuery,
@@ -232,18 +288,19 @@ async def update_status(callback: CallbackQuery,
     await task_ser.uppend_status_task(task_id=task_id,
                                       new_status=callback.data,
                                       db=db)
-    await callback.message.answer(
+    promt_message = await callback.message.edit_text(
         text="Статус задачи изменен"
     )
 
     text, keyboard = await task_ser.current_task_menu(task_id=task_id,
                                                       db=db)
     
-    await callback.message.answer(
+    await promt_message.edit_text(
         text=text,
         reply_markup=keyboard,
         parse_mode="markdown"
     )
+    await callback.answer()
 
 @router.callback_query(F.data == "task_new_responsible")
 async def choose_new_responsible(callback: CallbackQuery,
@@ -260,11 +317,12 @@ async def choose_new_responsible(callback: CallbackQuery,
                                                            company_id=company_id,
                                                            db=db)
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
-        parse_mode="markdown"
+        parse_mode=ParseMode.HTML
     )
+    await callback.answer()
 
 @router.callback_query(F.data.in_(["previuos_page_new_responsible",
                                    "next_page_new_responsible"]))
@@ -290,11 +348,12 @@ async def navigation_choose_new_resp(callback: CallbackQuery,
 
     await state.update_data(choose_resp_current_page=current_page)
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
         parse_mode="markdown"
     )
+    await callback.answer()
 
 @router.callback_query(F.data.startswith("new_responsible_"))
 async def appoint_new_resp(callback: CallbackQuery,
@@ -318,11 +377,12 @@ async def appoint_new_resp(callback: CallbackQuery,
     text, keyboard = await task_ser.current_task_menu(task_id=task_id,
                                                       db=db)
     
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
-        parse_mode="markdown"
+        parse_mode=ParseMode.HTML
     )
+    await callback.answer()
 
 
 # endregion

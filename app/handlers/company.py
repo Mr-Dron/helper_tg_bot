@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
@@ -22,16 +24,18 @@ async def get_my_companies(callback: CallbackQuery,
     keyboard = company_key.choice_company_menu(companies)
 
     if not companies:
-        await callback.message.answer(
+        await callback.message.edit_text(
             text="Нет активный компаний",
             reply_markup=keyboard
         )
+        await callback.answer()
         return 
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         text="Список компаний",
         reply_markup=keyboard
     )
+    await callback.answer()
 # endregion 
 
 # region создание компаний
@@ -41,12 +45,18 @@ async def create_companies(callback: CallbackQuery,
                            state: FSMContext):
     await state.set_state(company_state.CreateProfileState.new_company)
 
+    await callback.message.delete()
+
     text = "Введите название компании:"
 
-    await callback.message.answer(
+    promt_message = await callback.message.answer(
         text=text,
         reply_markup=company_key.return_to_menu()
     )
+
+    await state.update_data(promt_msg_id=promt_message.message_id)
+
+    await callback.answer()
 
 @router.message(
     company_state.CreateProfileState.new_company
@@ -55,7 +65,28 @@ async def read_new_company_data(message: Message,
                                 state: FSMContext,
                                 user: Users,
                                 db: AsyncSession):
+    data = await state.get_data()
+    promt_msg_id = data.get("promt_msg_id")
+
+    if promt_msg_id:
+        try:
+            await message.bot.delete_message(
+                chat_id=message.chat.id,
+                message_id=promt_msg_id
+            )
+        except:
+            pass
     
+    try:
+        await message.bot.delete_message(
+            chat_id=message.chat.id,
+            message_id=message.message_id
+        )
+    except:
+        pass
+
+    asyncio.sleep(0.5)
+
     company = await company_ser.create_company(message.text, user, db)
 
     text = "Новая компания:\n"\
@@ -69,6 +100,8 @@ async def read_new_company_data(message: Message,
         text,
         reply_markup=company_key.login_company_keyboard()
     )
+
+    await state.set_state(None)
 
 # endregion 
 
@@ -91,10 +124,11 @@ async def preview_company(callback: CallbackQuery,
 
     await state.update_data(company_id=company_id)
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=company_key.login_company_keyboard()
     )
+    await callback.answer()
 
 @router.callback_query(F.data.in_({"login_company", "company_menu"}))
 async def company_menu(callback: CallbackQuery,
@@ -112,10 +146,11 @@ async def company_menu(callback: CallbackQuery,
            f"ID - {company.id}\n"\
            f"Создатель - {company.creator_id}"
     
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=company_key.company_menu_keyboard()
     )
+    await callback.answer()
 
 # endregion
 

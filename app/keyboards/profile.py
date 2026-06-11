@@ -21,6 +21,12 @@ def update_menu():
                     text="Изменить ссылку",
                     callback_data="update_url"
                 )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="В меню",
+                    callback_data="return_menu"
+                )
             ]
         ]
     )

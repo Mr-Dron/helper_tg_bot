@@ -23,3 +23,15 @@ async def employees_company_menu(current_page: int,
                                                            employees_list=employees)
 
     return text, keyboard
+
+async def build_emlpoyee_card_context(employee_id: int, company_id: int, 
+                                      db: AsyncSession):
+    
+    employee = await employee_rep.get_current_employee_company(company_id=company_id,
+                                                               employee_id=employee_id,
+                                                               db=db)
+    keyboard = employee_key.employee_card_keyboard(employee_id=employee_id)
+    
+    text = await employee_help.employee_card_menu_text(employee=employee)
+
+    return text, keyboard

@@ -29,11 +29,12 @@ async def get_employees_company(callback: CallbackQuery,
 
     await state.update_data(employee_current_page=1)
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
         parse_mode="markdown"
     )
+    await callback.answer()
 
 @router.callback_query(F.data.in_(["page_employees_previous", "page_employees_next"]))
 async def navigation_employees_menu(callback: CallbackQuery,
@@ -53,11 +54,12 @@ async def navigation_employees_menu(callback: CallbackQuery,
                                                          company_id=company_id,
                                                          db=db)
     
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
         parse_mode="markdown"
     )
+    await callback.answer()
 # endregion
 
 # region добавление новго сотрудника
@@ -83,10 +85,39 @@ async def add_new_employee(callback: CallbackQuery,
     )
     keyboard = employee_key.return_employee_keyboard()
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
         parse_mode="markdown"
     )
+    await callback.answer()
+
+# endregion
+
+# region Карточка сотрудника
+
+@router.callback_query(F.data.startswith("login_employee_"))
+async def employee_card(callback: CallbackQuery,
+                        state: FSMContext,
+                        user: Users,
+                        db: AsyncSession):
+    
+    employee_id = int(callback.data.split("_")[-1])
+
+    data = await state.get_data()
+    company_id = data.get("company_id")
+
+    text, keyboard = await employee_ser.build_emlpoyee_card_context(employee_id=employee_id,
+                                                                    company_id=company_id,
+                                                                    db=db)
+
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=keyboard,
+        parse_mode="markdown"
+    )
+    await callback.answer()
+
+
 
 # endregion

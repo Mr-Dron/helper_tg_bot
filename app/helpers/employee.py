@@ -28,3 +28,18 @@ async def count_total_pages(company_id: int, db: AsyncSession):
         total_page = 1
 
     return total_page
+
+async def employee_card_menu_text(employee: EmployeesCompany):
+
+    fields = {
+        "Имя": employee.employees.first_name,
+        "Имя пользователя": f"@{employee.employees.username}",
+        "Должность": "_в разработке_"
+    }
+
+    lines = [
+        f"{label}: {value if value and value != '@' else "_не заполнено_"}" 
+        for label, value in fields.items() 
+    ]
+
+    return f"*Карточка сотрудника*\n\n" + "\n".join(lines)

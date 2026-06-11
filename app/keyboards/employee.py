@@ -62,3 +62,32 @@ def return_employee_keyboard():
     ])
 
     return keyboard
+
+def employee_card_keyboard(employee_id: int):
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="Сменить роль",
+                callback_data="new_role_employee"
+            ),
+            InlineKeyboardButton(
+                text="Исключить",
+                callback_data=f"exclude_from_company_{employee_id}"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Задачи",
+                callback_data=f"employee_tasks_{employee_id}"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=f"company_employees"
+            )
+        ]
+    ])
+
+    return keyboard

@@ -98,18 +98,18 @@ async def echo_handler(message: Message):
     await message.answer(message.text)
 
 
-@router.message(
-    F.text == "Вернуться в меню"
-)
-async def back_to_menu(message: Message,
-                       state: FSMContext):
+# @router.message(
+#     F.text == "Вернуться в меню"
+# )
+# async def back_to_menu(message: Message,
+#                        state: FSMContext):
     
-    await state.clear()
+#     await state.clear()
 
-    await message.answer(
-        "Главное меню",
-        reply_markup=menu.main_menu()
-    )
+#     await message.answer(
+#         "Главное меню",
+#         reply_markup=menu.main_menu()
+#     )
 
 @router.callback_query(
     F.data == "return_menu",
@@ -120,7 +120,8 @@ async def back_to_menu_callback(callback: CallbackQuery,
     
     await state.clear()
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         "Главное меню",
         reply_markup=menu.main_menu()
     )
+    await callback.answer()

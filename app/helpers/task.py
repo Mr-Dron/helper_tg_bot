@@ -1,9 +1,11 @@
 import math
 
+from aiogram import html
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.engine import Row
 
-from app.models import Tasks, EmployeesCompany
+from app.models import Tasks, EmployeesCompany, Users
 from app.repositories import task as task_per
 
 async def prepare_text_tasks_menu(tasks_list: list[Tasks], current_page: int, total_page: int):
@@ -64,8 +66,8 @@ async def prepate_text_current_task_menu(task: Tasks):
     fields = {
         "Название": task.title,
         "Описание": task.description,
-        "Ответственный": f"@{task.responsible.username}",
-        "Создатель": f"@{task.creator.username}",
+        "Ответственный": formatter_worker_link(task.responsible),
+        "Создатель": formatter_worker_link(task.creator),
         "Этап": task.status.value,
         "Компаний": task.company_id
     }
@@ -81,7 +83,7 @@ async def prepare_text_edit_status(task: Tasks):
     fields = {
         "Название": task.title,
         "Описание": task.description,
-        "Ответственный": f"@{task.responsible.username}",
+        "Ответственный": formatter_worker_link(task.responsible),
     }
 
     lines = [
@@ -105,3 +107,11 @@ async def text_choose_new_responsible(employees_data: list[Row],
 
     return "Выберите ответсвенного\n"\
            f"Страница {current_page} из {total_page}\n\n" + "\n".join(lines)
+
+def formatter_worker_link(user: Users):
+
+    if user.username:
+        clean_username = user.username.lstrip("@")
+        return html.link(value=user.first_name, link=f"tg://resolve?domain={clean_username}")
+    elif user.telegram_id:
+        return html.link(value=user.first_name, link=f"tg://user?id={user.telegram_id}")

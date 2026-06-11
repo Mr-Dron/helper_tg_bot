@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
@@ -16,25 +18,30 @@ async def me_info(callback: CallbackQuery,
                   user: Users,
                   db: AsyncSession):
 
-    text = f"ID: {user.id}\n" + await profile_ser.build_profile_text(user)
+    text, keyboard = await profile_ser.send_profile_menu(user=user)
 
-    await callback.message.answer(
+    text = f"ID: {user.id}\n" + text
+    await callback.message.edit_text(
         text,
-        parse_mode="HTML",
-        reply_markup=menu.back_menu()
+        reply_markup=keyboard,
+        parse_mode="markdown"
     )
 
     await callback.answer()
 
-
+# TODO Поменять это чудовище
 @router.callback_query(F.data == "update_me")
 async def update_profile(callback: CallbackQuery,
                          user: Users,
                          db: AsyncSession):
     
-    await profile_ser.send_update_profile_menu(
-        callback.message,
-        user)
+    text, keyboard = await profile_ser.send_update_profile_menu(user=user)
+
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=keyboard,
+        parse_mode="markdown"
+    )
     
     await callback.answer()
 
@@ -48,10 +55,15 @@ async def update_first_name(callback: CallbackQuery,
     
     await state.set_state(UpdateProfileState.waiting_for_firstname)
 
-    await callback.message.answer(
+    keyboard = profile_key.take_data_update_menu()
+
+    promt_message = await callback.message.edit_text(
         text,
-        reply_markup=profile_key.take_data_update_menu()
+        reply_markup=keyboard,
+        parse_mode="markdown"
     )
+
+    await state.update_data(promt_msg_id=promt_message.message_id)
 
     await callback.answer()
 
@@ -70,10 +82,17 @@ async def read_auto_update_first_name(callback: CallbackQuery,
 
     await state.clear()
     
-    await callback.message.answer("Имя обнавлено")
+    await callback.message.edit_text("Имя обнавлено")
 
-    await profile_ser.send_update_profile_menu(callback.message,
-                                               user)
+    asyncio.sleep(0.5)
+
+    text, keyboard = await profile_ser.send_update_profile_menu(user=user)
+
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=keyboard,
+        parse_mode="markdown"
+    )
 
 @router.message(
         UpdateProfileState.waiting_for_firstname
@@ -84,14 +103,43 @@ async def read_updated_first_name(message: Message,
                                   db: AsyncSession):
     user.first_name = message.text
 
+    data = await state.get_data()
+    promt_msg_id = data.get("promt_msg_id")
+
     await db.flush()
 
-    await state.clear()
+    if promt_msg_id:
+        try: 
+            await message.bot.delete_message(
+                chat_id=message.chat.id,
+                message_id=promt_msg_id
+            )
+        except:
+            pass
     
-    await message.answer("Имя обнавлено")
+    try:
+        await message.bot.delete_message(
+            chat_id=message.chat.id,
+            message_id=message.message_id
+        )
+    except:
+        pass
 
-    await profile_ser.send_update_profile_menu(message,
-                                               user)
+    asyncio.sleep(0.5)
+    
+    promt_message = await message.answer("Имя обнавлено")
+
+    await state.set_state(None)
+
+    asyncio.sleep(0.5)
+
+    text, keyboard = await profile_ser.send_update_profile_menu(user=user)
+
+    await promt_message.edit_text(
+        text=text,
+        reply_markup=keyboard,
+        parse_mode="markdown"
+    )
 
 
 @router.callback_query(F.data == "update_username")
@@ -102,7 +150,7 @@ async def update_username(callback: CallbackQuery,
     
     await state.set_state(UpdateProfileState.waiting_for_username)
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         text,
         reply_markup=profile_key.take_data_update_menu()
     )
@@ -121,9 +169,15 @@ async def read_auto_update_username(callback: CallbackQuery,
 
     await db.flush()
 
-    await state.clear()
+    await state.set_state(None)
 
-    await profile_ser.send_update_profile_menu(callback.message, user)
+    text, keyboard = await profile_ser.send_update_profile_menu(user=user)
+
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=keyboard,
+        parse_mode="markdown"
+    )
 
 @router.callback_query(F.data == "update_url")
 async def update_telegram_url(callback: CallbackQuery,
@@ -134,7 +188,7 @@ async def update_telegram_url(callback: CallbackQuery,
     
     await state.set_state(UpdateProfileState.waiting_for_telegramlink)
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         text,
         reply_markup=profile_key.take_data_update_menu()
     )
@@ -155,6 +209,12 @@ async def read_auto_update_username(callback: CallbackQuery,
 
     await db.flush()
 
-    await state.clear()
+    await state.set_state(None)
 
-    await profile_ser.send_update_profile_menu(callback.message, user)
+    text, keyboard = await profile_ser.send_update_profile_menu(user=user)
+
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=keyboard,
+        parse_mode="markdown"
+    )
