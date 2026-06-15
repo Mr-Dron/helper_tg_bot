@@ -31,7 +31,12 @@ class Tasks(Base):
         ForeignKey("companies.id", ondelete="CASCADE"),
         nullable=False
         )
+    department_id: Mapped[int] = mapped_column(
+        ForeignKey("departments.id", ondelete="SET NUll"),
+        nullable=True
+    )
     
     creator = relationship("Users", back_populates="created_tasks", foreign_keys=[creator_id])
     responsible = relationship("Users", back_populates="assigned_tasks", foreign_keys=[responsible_id])
     company = relationship("Companies", back_populates="tasks")
+    department = relationship("Departments", back_populates="tasks")

@@ -74,6 +74,16 @@ def company_menu_keyboard():
                 InlineKeyboardButton(
                     text="сотрудники",
                     callback_data="company_employees"
+                ),
+                InlineKeyboardButton(
+                    text="Отделы",
+                    callback_data="company_departments"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Создать отдел",
+                    callback_data="create_dep"
                 )
             ],
             [

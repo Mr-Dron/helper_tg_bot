@@ -36,7 +36,7 @@ async def build_task_create_context(responsible_id: int=None, title:  str=None, 
 
     keyboard = task_key.create_task_keyboard(title)
 
-    return (text, keyboard)
+    return text, keyboard
 
 
 async def save_new_task(company_id: int, user: Users, title, description, db: AsyncSession):

@@ -6,6 +6,7 @@ from aiogram.fsm.storage.redis import RedisStorage
 
 from app.core.settings import settings
 from app.handlers import ROUTERS
+from app.department import department_router
 from app.middleware.context import DBUserMiddleware
 
 async def main():
@@ -18,6 +19,8 @@ async def main():
 
     bot = Bot(token=settings.BOT_TOKEN)
     
+    ROUTERS.append(department_router)
+
     db = Dispatcher(storage=storage)
     db.include_routers(*ROUTERS)
 

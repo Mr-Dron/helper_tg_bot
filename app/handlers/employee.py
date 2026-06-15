@@ -80,7 +80,7 @@ async def add_new_employee(callback: CallbackQuery,
 
     text = (
         "*Пригласительная ссылка создана*\n\n"
-        "Перешлите ее новому сотруднику. Она будет активна 24 часа\n"
+        "Перешлите ее новому сотруднику. Она будет активна 24 часа\n\n"
         f"`{invite_link}`"
     )
     keyboard = employee_key.return_employee_keyboard()

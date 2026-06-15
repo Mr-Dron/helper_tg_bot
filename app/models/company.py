@@ -17,4 +17,5 @@ class Companies(Base):
 
     employees = relationship("EmployeesCompany", back_populates="company")
     tasks = relationship("Tasks", back_populates="company")
+    departments = relationship("Departments", back_populates="company")
     

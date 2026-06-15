@@ -49,7 +49,7 @@ def tasks_menu(tasks_list: list[Tasks], total_page: int, current_page: int):
     return keyboard
 
 
-def create_task_keyboard(title):
+def create_task_keyboard(title: str):
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[

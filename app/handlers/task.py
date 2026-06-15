@@ -86,7 +86,7 @@ async def create_task(callback: CallbackQuery,
     await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
-        parse_mode="markdown"
+        parse_mode=ParseMode.HTML
     )
     await callback.answer()
 
@@ -148,7 +148,7 @@ async def read_title(message: Message,
     await message.answer(
         text=text,
         reply_markup=keyboard,
-        parse_mode="markdown"
+        parse_mode=ParseMode.HTML
     )
 
 @router.message(
@@ -189,7 +189,7 @@ async def read_description(message: Message,
     await message.answer(
         text=text,
         reply_markup=keyboard,
-        parse_mode="markdown"
+        parse_mode=ParseMode.HTML
     )
 
 
@@ -226,7 +226,7 @@ async def save_new_task(callback: CallbackQuery,
     await callback.message.edit_text(
         text=text,
         reply_markup=keyboard,
-        parse_mode="markdown"
+        parse_mode=ParseMode.HTML
     )
 
     await callback.answer()
@@ -298,7 +298,7 @@ async def update_status(callback: CallbackQuery,
     await promt_message.edit_text(
         text=text,
         reply_markup=keyboard,
-        parse_mode="markdown"
+        parse_mode=ParseMode.HTML
     )
     await callback.answer()
 

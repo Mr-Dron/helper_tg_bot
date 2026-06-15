@@ -18,6 +18,7 @@ async def get_companies_req(user: Users, db: AsyncSession):
     
     return companies
 
+# общаяя
 async def get_company_by_id_req(company_id: int, db: AsyncSession):
 
     stmt = (
@@ -27,9 +28,6 @@ async def get_company_by_id_req(company_id: int, db: AsyncSession):
 
     company = (await db.execute(stmt)).scalar_one_or_none()
 
-    if not company:
-        return None
-    
     return company
 
 async def get_company_for_preview(company_id: int, db: AsyncSession):

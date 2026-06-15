@@ -4,6 +4,7 @@ from sqlalchemy import select, func, and_, join, outerjoin
 
 from app.models import EmployeesCompany, CompanyInvite, Users, Tasks
 
+# общий
 async def get_employee_company(current_page: int, company_id: int, db: AsyncSession):
 
     stmt = (
@@ -18,6 +19,7 @@ async def get_employee_company(current_page: int, company_id: int, db: AsyncSess
 
     return employees
 
+# общий
 async def get_count_employees_company(company_id: int, db: AsyncSession):
 
     stmt = (
@@ -87,6 +89,7 @@ async def get_employees_company_with_tasks(current_page: int, company_id: int,
 
     return employees
 
+# общаяя
 async def get_current_employee_company(company_id: int, employee_id: int,
                                        db: AsyncSession) -> EmployeesCompany:
     

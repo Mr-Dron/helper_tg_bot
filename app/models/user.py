@@ -28,3 +28,6 @@ class Users(Base):
     company = relationship("EmployeesCompany", back_populates="employees")
     created_tasks = relationship("Tasks", back_populates="creator", foreign_keys="Tasks.creator_id")
     assigned_tasks = relationship("Tasks", back_populates="responsible", foreign_keys="Tasks.responsible_id")
+    created_departments = relationship("Departments", back_populates="creator", foreign_keys="Departments.creator_id")
+    assigned_departments = relationship("Departments", back_populates="responsible", foreign_keys="Departments.responsible_id")
+    department = relationship("DepartmentMembers", back_populates="members")
